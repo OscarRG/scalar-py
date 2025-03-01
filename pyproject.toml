@@ -3,7 +3,7 @@ requires = ["setuptools", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "scalar-py"
+name = "scalar-docs"
 version = "0.1.0"
 description = "A Python wrapper for the Scalar API documentation library."
 authors = [
