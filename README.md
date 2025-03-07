@@ -4,10 +4,10 @@
 
 ## Installation
 
-To install `scalar_py`, you can use `pip`:
+To install `scalar-docs`, you can use `pip`:
 
 ```bash
-pip install scalar_py
+pip install scalar-docs
 ```
 
 If you'd like to install the example dependencies for specific use cases, you can do so by running:

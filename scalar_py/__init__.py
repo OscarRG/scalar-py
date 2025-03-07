@@ -3,7 +3,6 @@ import os
 import urllib.parse
 from dataclasses import dataclass, field, asdict
 from typing import Callable, Dict, List, Optional, Union
-
 import requests
 
 # Constants
@@ -142,7 +141,7 @@ class Options:
     customCss: str = ""
     searchHotKey: str = "k"
     baseServerURL: str = ""
-    servers: Optional[List[ServerOptions]] = None
+    servers: List[ServerOptions] = None
     favicon: str = ""
     hiddenClients: Optional[Union[List[str], bool]] = field(default_factory=list) # hiddenClients: true OR hiddenClients: ["http", "curl"]
     authentication: Optional[Authentication] = None
@@ -151,7 +150,7 @@ class Options:
     theme: str = "default"
     metaData: MetaDataOptions = field(default_factory=MetaDataOptions)
     hideTestRequestButton: bool = False
-    pathRouting: str = ""
+    pathRouting: Optional[Dict] = None
     hideClientButton: bool = False
     custom_options: CustomOptions = field(default_factory=CustomOptions)
 
@@ -267,3 +266,28 @@ def api_reference_html(options_input: Options) -> str:
     </html>
     """
     return html.strip()
+
+def get_base_path_from_spec(spec_url: str):
+    """
+    Fetches the OpenAPI/Swagger specification and extracts the base path.
+
+    - For Swagger 2.0, it returns `basePath`.
+    - For OpenAPI 3.x, it returns `servers[0]["url"]`.
+    - If not found or an error occurs, it returns None.
+    """
+    try:
+        response = requests.get(spec_url)
+        response.raise_for_status()
+        spec_data = response.json()
+
+        # Check OpenAPI or Swagger version
+        if "swagger" in spec_data:  # Swagger 2.0
+            return spec_data.get("basePath")
+        elif "openapi" in spec_data:  # OpenAPI 3.x
+            servers = spec_data.get("servers", [])
+            if servers and isinstance(servers, list) and "url" in servers[0]:
+                return servers[0]["url"]
+    except (requests.RequestException, ValueError, KeyError, IndexError):
+        pass
+    
+    return None
