@@ -272,21 +272,32 @@ def get_base_path_from_spec(spec_url: str):
     Fetches the OpenAPI/Swagger specification and extracts the base path.
 
     - For Swagger 2.0, it returns `basePath`.
-    - For OpenAPI 3.x, it returns `servers[0]["url"]`.
-    - If not found or an error occurs, it returns None.
+    - For OpenAPI 3.x, it returns `servers[0]["url"]` (if available).
+    - If `servers` is missing, it tries to infer base path from `paths` keys.
+    - If nothing is found, it returns None.
     """
     try:
         response = requests.get(spec_url)
         response.raise_for_status()
         spec_data = response.json()
 
-        # Check OpenAPI or Swagger version
-        if "swagger" in spec_data:  # Swagger 2.0
+        # Swagger 2.0 Case
+        if "swagger" in spec_data:
             return spec_data.get("basePath")
-        elif "openapi" in spec_data:  # OpenAPI 3.x
+
+        # OpenAPI 3.x Case
+        elif "openapi" in spec_data:
             servers = spec_data.get("servers", [])
             if servers and isinstance(servers, list) and "url" in servers[0]:
                 return servers[0]["url"]
+
+            # Fallback: Infer base path from paths
+            paths = spec_data.get("paths", {})
+            if paths:
+                first_path = next(iter(paths))
+                base_path = "/" + first_path.split("/")[1] if first_path.startswith("/") else "/" + first_path
+                return base_path
+                
     except (requests.RequestException, ValueError, KeyError, IndexError):
         pass
     
